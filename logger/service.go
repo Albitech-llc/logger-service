@@ -1,15 +1,14 @@
 // Package services contains the business logic implementations.
 // It interacts with repository layers to perform operations on data.
-package services
+package logger
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/Albitech-llc/logger-service/internal/config"
-	"github.com/Albitech-llc/logger-service/internal/models"              // Importing model
-	"github.com/Albitech-llc/logger-service/internal/services/interfaces" // Importing service interface definitions
+	"github.com/Albitech-llc/logger-service/logger/interfaces"
+	"github.com/Albitech-llc/logger-service/logger/models"
 	"github.com/Albitech-llc/logger-service/pkg/caching"
 )
 
@@ -122,7 +121,7 @@ func (s *service) LogMessage(service string, message string, level string) error
 
 func publish(json []byte, channel string) error {
 	// Access configuration statically
-	cfg := config.LoadConfig()
+	cfg := LoadConfig()
 
 	// Initialize Redis
 	rdb, ctx, err := caching.InitializeRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisDB)

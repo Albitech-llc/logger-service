@@ -27,19 +27,19 @@ docker-compose up
 ## Example Logging API
 - Log an Info Message:
 ```go
-service.LogInfo("MyService", "This is an info message.")
+logger.LogInfo("MyService", "This is an info message.")
 ```
 - Log a Warning Message:
 ```go
-service.LogWarning("MyService", "This is a warning message.")
+logger.LogWarning("MyService", "This is a warning message.")
 ```
 - Log an Error Message:
 ```go
-service.LogError("MyService", "This is an error message.")
+logger.LogError("MyService", "This is an error message.")
 ```
 - Log a Custom Message:
 ```go
-service.LogMessage("MyService", "Custom log message.", "DEBUG")
+logger.LogMessage("MyService", "Custom log message.", "DEBUG")
 ```
 
 ## Environment Variables
