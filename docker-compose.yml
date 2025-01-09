@@ -1,0 +1,24 @@
+services:
+  redis:
+    image: redis:latest
+    container_name: logger-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data  # Optional: persistent data storage
+
+  go_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: logger-service
+    ports:
+      - "7979:7979"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=logger-redis
+      - REDIS_PORT=6379
+
+volumes:
+  redis_data:
