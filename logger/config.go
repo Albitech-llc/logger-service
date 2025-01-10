@@ -8,9 +8,17 @@ import (
 )
 
 type Config struct {
-	RedisHost string
-	RedisPort string
-	RedisDB   int
+	IsPubSub     bool
+	RedisHost    string
+	RedisPort    string
+	RedisDB      int
+	LogsFilePath string
+
+	LogsChannel    string
+	InfoChannel    string
+	WarningChannel string
+	ErrorChannel   string
+	DebugChannel   string
 }
 
 var (
@@ -29,9 +37,11 @@ func LoadConfig() *Config {
 		}
 
 		config = &Config{
-			RedisHost: viper.GetString("redis_host"),
-			RedisPort: viper.GetString("redis_port"),
-			RedisDB:   viper.GetInt("redis_db"),
+			IsPubSub:     viper.GetBool("is_pub_sub"),
+			RedisHost:    viper.GetString("redis_host"),
+			RedisPort:    viper.GetString("redis_port"),
+			RedisDB:      viper.GetInt("redis_db"),
+			LogsFilePath: viper.GetString("logs_file_path"),
 		}
 	})
 	return config

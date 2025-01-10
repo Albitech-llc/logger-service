@@ -1,5 +1,13 @@
 {
+    "is_pub_sub": false,
     "redis_host": "logs-redis",
     "redis_port": "6379",
-    "redis_db": 0
+    "redis_db": 0,
+    "logs_file_path":"fallback_logs.json",
+
+    "logs_channel": "logs",
+    "info_channel": "info_logs",
+    "warning_channel": "warning_logs",
+    "error_channel": "error_logs",
+    "debug_channel": "debug_logs"
 }
