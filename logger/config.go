@@ -42,6 +42,12 @@ func LoadConfig() *Config {
 			RedisPort:    viper.GetString("redis_port"),
 			RedisDB:      viper.GetInt("redis_db"),
 			LogsFilePath: viper.GetString("logs_file_path"),
+
+			LogsChannel:    viper.GetString("logs_channel"),
+			InfoChannel:    viper.GetString("info_channel"),
+			WarningChannel: viper.GetString("warning_channel"),
+			ErrorChannel:   viper.GetString("error_channel"),
+			DebugChannel:   viper.GetString("debug_channel"),
 		}
 	})
 	return config

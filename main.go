@@ -26,7 +26,7 @@ func main() {
 	defer logServ.Close(rdb) // Ensure service resources are released
 
 	fmt.Println("Start")
-	for i := range 10 {
+	for i := range 2000 {
 		logServ.LogInfo("Main", fmt.Sprintf("INFO %d", i))
 
 		logServ.LogWarning("Main", fmt.Sprintf("WWWWWW %d", i))
@@ -36,7 +36,7 @@ func main() {
 
 	time.Sleep(15 * time.Second)
 	fmt.Println("Step 2")
-	for i := range 3 {
+	for i := range 3000 {
 		logServ.LogInfo("Main 2", fmt.Sprintf("INFO %d", i))
 
 		logServ.LogWarning("Main 2", fmt.Sprintf("WWWWWW %d", i))

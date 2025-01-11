@@ -5,10 +5,8 @@ package logger
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"time"
 
-	"github.com/Albitech-llc/logger-service/logger/helper"
 	"github.com/Albitech-llc/logger-service/logger/models"
 	"github.com/Albitech-llc/logger-service/pkg/caching"
 	"github.com/go-redis/redis/v8"
@@ -68,8 +66,9 @@ func (s *service) LogWarning(service string, message string) {
 		Message:   message,
 	}
 
-	s.queueWarningLog(log)
-	s.queueLog(log)
+	// LogWarning: Adds warning log to both specific and general channels.
+	s.queueWarningLog(log) // Dedicated processing for warning logs
+	s.queueLog(log)        // General processing for all logs
 }
 
 func (s *service) LogError(service string, message string) {
@@ -201,6 +200,91 @@ func (s *service) queueDebugLog(log models.LogMessage) {
 	}
 }
 
+func (s *service) allWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
+	s.logger.Debug("Starting info log publishing goroutine")
+	for log := range s.logChan {
+		if rdb != nil {
+			s.logger.Infoln(string(log))
+			err := rdb.Publish(ctx, cfg.LogsChannel, log).Err()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
+			}
+		} else {
+			// Redis unavailable, directly write to file
+			//helper.WriteToFile(fallbackFile, log)
+		}
+	}
+}
+
+func (s *service) debugWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
+	s.logger.Debug("Starting info log publishing goroutine")
+	for log := range s.logDebugChan {
+		if rdb != nil {
+			s.logger.Debugln(string(log))
+			err := rdb.Publish(ctx, cfg.DebugChannel, log).Err()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
+			}
+		} else {
+			// Redis unavailable, directly write to file
+			//helper.WriteToFile(fallbackFile, log)
+		}
+	}
+}
+
+func (s *service) infoWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
+	s.logger.Debug("Starting info log publishing goroutine")
+	for log := range s.logInfoChan {
+		if rdb != nil {
+			s.logger.Infof("\033[34m%s\033[0m \n", string(log))
+			err := rdb.Publish(ctx, cfg.InfoChannel, log).Err()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
+			}
+		} else {
+			// Redis unavailable, directly write to file
+			//helper.WriteToFile(fallbackFile, log)
+		}
+	}
+}
+
+func (s *service) warningWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
+	s.logger.Debug("Starting warning log publishing goroutine")
+	for log := range s.logWarnChan {
+		if rdb != nil {
+			s.logger.Warningf("\033[33m%s\033[0m \n", string(log))
+			err := rdb.Publish(ctx, cfg.WarningChannel, log).Err()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
+			}
+		} else {
+			// Redis unavailable, directly write to file
+			//helper.WriteToFile(fallbackFile, log)
+		}
+	}
+}
+
+func (s *service) errorWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
+	s.logger.Debug("Starting error log publishing goroutine")
+	for log := range s.logErrorChan {
+		if rdb != nil {
+			s.logger.Errorf("\033[31m%s\033[0m \n", string(log))
+			err := rdb.Publish(ctx, cfg.ErrorChannel, log).Err()
+			if err != nil {
+				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
+			}
+		} else {
+			// Redis unavailable, directly write to file
+			//helper.WriteToFile(fallbackFile, log)
+		}
+	}
+}
+
 func (s *service) startPublish() {
 	// Access configuration statically
 	cfg := LoadConfig()
@@ -223,95 +307,33 @@ func (s *service) startPublish() {
 	}
 
 	// Create a fallback log file
-	fallbackFile, fileErr := os.OpenFile(cfg.LogsFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if fileErr != nil {
-		s.logger.WithError(fileErr).Error("Failed to create fallback log file")
-	}
+	// fallbackFile, fileErr := os.OpenFile(cfg.LogsFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// if fileErr != nil {
+	// 	s.logger.WithError(fileErr).Error("Failed to create fallback log file")
+	// }
 	//defer fallbackFile.Close()
 
 	go func() {
-		for log := range s.logChan {
-			s.logger.Infoln(string(log))
-			if rdb != nil {
-				err := rdb.Publish(ctx, "logs", log).Err()
-				if err != nil {
-					s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
-					helper.WriteToFile(fallbackFile, log) // Fallback to file logging
-				}
-			} else {
-				// Redis unavailable, directly write to file
-				helper.WriteToFile(fallbackFile, log)
-			}
-		}
+		s.errorWorker(rdb, *cfg, ctx)
 	}()
 
 	go func() {
-		for log := range s.logInfoChan {
-			s.logger.Infof("\033[34m%s\033[0m \n", string(log))
-
-			if rdb != nil {
-				err := rdb.Publish(ctx, cfg.InfoChannel, log).Err()
-				if err != nil {
-					s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
-					helper.WriteToFile(fallbackFile, log) // Fallback to file logging
-				}
-			} else {
-				// Redis unavailable, directly write to file
-				helper.WriteToFile(fallbackFile, log)
-			}
-		}
+		s.warningWorker(rdb, *cfg, ctx)
 	}()
 
 	go func() {
-		for log := range s.logWarnChan {
-			s.logger.Warningf("\033[33m%s\033[0m \n", string(log))
-
-			if rdb != nil {
-				err := rdb.Publish(ctx, cfg.WarningChannel, log).Err()
-				if err != nil {
-					s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
-					helper.WriteToFile(fallbackFile, log) // Fallback to file logging
-				}
-			} else {
-				// Redis unavailable, directly write to file
-				helper.WriteToFile(fallbackFile, log)
-			}
-		}
+		s.infoWorker(rdb, *cfg, ctx)
 	}()
 
 	go func() {
-		for log := range s.logErrorChan {
-			s.logger.Errorf("\033[31m%s\033[0m \n", string(log))
-
-			if rdb != nil {
-				err := rdb.Publish(ctx, cfg.ErrorChannel, log).Err()
-				if err != nil {
-					s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
-					helper.WriteToFile(fallbackFile, log) // Fallback to file logging
-				}
-			} else {
-				// Redis unavailable, directly write to file
-				helper.WriteToFile(fallbackFile, log)
-			}
-		}
+		s.debugWorker(rdb, *cfg, ctx)
 	}()
 
 	go func() {
-		for log := range s.logDebugChan {
-			s.logger.Debugln(string(log))
-
-			if rdb != nil {
-				err := rdb.Publish(ctx, cfg.DebugChannel, log).Err()
-				if err != nil {
-					s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
-					helper.WriteToFile(fallbackFile, log) // Fallback to file logging
-				}
-			} else {
-				// Redis unavailable, directly write to file
-				helper.WriteToFile(fallbackFile, log)
-			}
-		}
+		s.allWorker(rdb, *cfg, ctx)
 	}()
+
+	s.logger.Debug("All publishing goroutines have been started")
 }
 
 func (s *service) Close(rdb *redis.Client) {
