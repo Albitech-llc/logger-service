@@ -1,6 +1,6 @@
 {
-    "is_pub_sub": false,
-    "redis_host": "logs-redis",
+    "is_pub_sub": true,
+    "redis_host": "localhost",
     "redis_port": "6379",
     "redis_db": 0,
     "logs_file_path":"fallback_logs.json",

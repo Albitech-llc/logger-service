@@ -217,9 +217,9 @@ func (s *service) startPublish() {
 			rdb = nil // Mark Redis as unavailable
 		}
 
-		if rdb != nil {
-			defer rdb.Close()
-		}
+		// if rdb != nil {
+		// 	defer rdb.Close()
+		// }
 	}
 
 	// Create a fallback log file
@@ -314,7 +314,15 @@ func (s *service) startPublish() {
 	}()
 }
 
-func (s *service) Close() {
+func (s *service) Close(rdb *redis.Client) {
+	// Close the Redis client
+	if rdb != nil {
+		err := rdb.Close()
+		if err != nil {
+			s.logger.WithError(err).Error("Error while closing Redis client")
+		}
+	}
+
 	// Close the channels
 	close(s.logChan)
 	close(s.logInfoChan)
