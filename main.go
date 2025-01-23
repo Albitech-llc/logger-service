@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Albitech-llc/logger-service/logger"
-	"github.com/Albitech-llc/logger-service/pkg/caching"
+	"github.com/Elbitech-llc/logger-service/logger"
+	"github.com/Elbitech-llc/logger-service/pkg/caching"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 
 	cfg := logger.LoadConfig()
 
-	rdb, _, err := caching.InitializeRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisDB)
+	rdb, _, err := caching.InitializeRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.LogsDB)
 	if err != nil {
 		fmt.Printf("Failed to initialize Redis: %v", err)
 	}

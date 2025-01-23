@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Albitech-llc/logger-service/logger/models"
-	"github.com/Albitech-llc/logger-service/pkg/caching"
+	"github.com/Elbitech-llc/logger-service/logger/models"
+	"github.com/Elbitech-llc/logger-service/pkg/caching"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
@@ -100,7 +100,7 @@ func (s *service) queueLog(log models.LogMessage) {
 	logJSON, err := json.Marshal(log)
 	if err != nil {
 		s.logger.SetLevel(logrus.ErrorLevel)
-		s.logger.WithError(err).Error("Error serializing log")
+		s.logger.WithError(err).Error("[LOGGER] Error serializing log")
 		return
 	}
 
@@ -110,7 +110,7 @@ func (s *service) queueLog(log models.LogMessage) {
 		return
 	default:
 		s.logger.SetLevel(logrus.WarnLevel)
-		s.logger.Warn("Logs channel is full, dropping log")
+		s.logger.Warn("[LOGGER] Logs channel is full, dropping log")
 		// Handle case where channel is full (e.g., drop or retry)
 		time.Sleep(10 * time.Millisecond) // Retry after a short delay
 	}
@@ -121,7 +121,7 @@ func (s *service) queueInfoLog(log models.LogMessage) {
 	logJSON, err := json.Marshal(log)
 	if err != nil {
 		s.logger.SetLevel(logrus.ErrorLevel)
-		s.logger.WithError(err).Error("Error serializing log")
+		s.logger.WithError(err).Error("[LOGGER] Error serializing log")
 		return
 	}
 
@@ -131,7 +131,7 @@ func (s *service) queueInfoLog(log models.LogMessage) {
 		return
 	default:
 		s.logger.SetLevel(logrus.WarnLevel)
-		s.logger.Warn("INFO Log channel is full, dropping log")
+		s.logger.Warn("[LOGGER] INFO Log channel is full, dropping log")
 		// Handle case where channel is full (e.g., drop or retry)
 		time.Sleep(10 * time.Millisecond) // Retry after a short delay
 	}
@@ -142,7 +142,7 @@ func (s *service) queueWarningLog(log models.LogMessage) {
 	logJSON, err := json.Marshal(log)
 	if err != nil {
 		s.logger.SetLevel(logrus.ErrorLevel)
-		s.logger.WithError(err).Error("Error serializing log")
+		s.logger.WithError(err).Error("[LOGGER] Error serializing log")
 		return
 	}
 
@@ -152,7 +152,7 @@ func (s *service) queueWarningLog(log models.LogMessage) {
 		return
 	default:
 		s.logger.SetLevel(logrus.WarnLevel)
-		s.logger.Warn("WARNING Log channel is full, dropping log")
+		s.logger.Warn("[LOGGER] WARNING Log channel is full, dropping log")
 		// Handle case where channel is full (e.g., drop or retry)
 		time.Sleep(10 * time.Millisecond) // Retry after a short delay
 	}
@@ -163,7 +163,7 @@ func (s *service) queueErrorLog(log models.LogMessage) {
 	logJSON, err := json.Marshal(log)
 	if err != nil {
 		s.logger.SetLevel(logrus.ErrorLevel)
-		s.logger.WithError(err).Error("Error serializing log")
+		s.logger.WithError(err).Error("[LOGGER] Error serializing log")
 		return
 	}
 
@@ -173,7 +173,7 @@ func (s *service) queueErrorLog(log models.LogMessage) {
 		return
 	default:
 		s.logger.SetLevel(logrus.WarnLevel)
-		s.logger.Warn("ERROR Log channel is full, dropping log")
+		s.logger.Warn("[LOGGER] ERROR Log channel is full, dropping log")
 		// Handle case where channel is full (e.g., drop or retry)
 		time.Sleep(10 * time.Millisecond) // Retry after a short delay
 	}
@@ -184,7 +184,7 @@ func (s *service) queueDebugLog(log models.LogMessage) {
 	logJSON, err := json.Marshal(log)
 	if err != nil {
 		s.logger.SetLevel(logrus.ErrorLevel)
-		s.logger.WithError(err).Error("Error serializing log")
+		s.logger.WithError(err).Error("[LOGGER] Error serializing log")
 		return
 	}
 
@@ -194,20 +194,20 @@ func (s *service) queueDebugLog(log models.LogMessage) {
 		return
 	default:
 		s.logger.SetLevel(logrus.WarnLevel)
-		s.logger.Warn("DEBUG Log channel is full, dropping log")
+		s.logger.Warn("[LOGGER] DEBUG Log channel is full, dropping log")
 		// Handle case where channel is full (e.g., drop or retry)
 		time.Sleep(10 * time.Millisecond) // Retry after a short delay
 	}
 }
 
 func (s *service) allWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
-	s.logger.Debug("Starting info log publishing goroutine")
+	s.logger.Debug("[LOGGER] Starting info log publishing goroutine")
 	for log := range s.logChan {
 		if rdb != nil {
 			s.logger.Infoln(string(log))
-			err := rdb.Publish(ctx, cfg.LogsChannel, log).Err()
+			err := rdb.Publish(ctx, cfg.Logging.Channels.Logs, log).Err()
 			if err != nil {
-				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				s.logger.WithError(err).Error("[LOGGER] Failed to publish log to Redis. Writing to file")
 				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
 			}
 		} else {
@@ -218,13 +218,13 @@ func (s *service) allWorker(rdb *redis.Client, cfg Config, ctx context.Context) 
 }
 
 func (s *service) debugWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
-	s.logger.Debug("Starting info log publishing goroutine")
+	s.logger.Debug("[LOGGER] Starting info log publishing goroutine")
 	for log := range s.logDebugChan {
 		if rdb != nil {
 			s.logger.Debugln(string(log))
-			err := rdb.Publish(ctx, cfg.DebugChannel, log).Err()
+			err := rdb.Publish(ctx, cfg.Logging.Channels.Debug, log).Err()
 			if err != nil {
-				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				s.logger.WithError(err).Error("[LOGGER] Failed to publish log to Redis. Writing to file")
 				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
 			}
 		} else {
@@ -235,13 +235,13 @@ func (s *service) debugWorker(rdb *redis.Client, cfg Config, ctx context.Context
 }
 
 func (s *service) infoWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
-	s.logger.Debug("Starting info log publishing goroutine")
+	s.logger.Debug("[LOGGER] Starting info log publishing goroutine")
 	for log := range s.logInfoChan {
 		if rdb != nil {
 			s.logger.Infof("\033[34m%s\033[0m \n", string(log))
-			err := rdb.Publish(ctx, cfg.InfoChannel, log).Err()
+			err := rdb.Publish(ctx, cfg.Logging.Channels.Info, log).Err()
 			if err != nil {
-				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				s.logger.WithError(err).Error("[LOGGER] Failed to publish log to Redis. Writing to file")
 				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
 			}
 		} else {
@@ -252,13 +252,13 @@ func (s *service) infoWorker(rdb *redis.Client, cfg Config, ctx context.Context)
 }
 
 func (s *service) warningWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
-	s.logger.Debug("Starting warning log publishing goroutine")
+	s.logger.Debug("[LOGGER] Starting warning log publishing goroutine")
 	for log := range s.logWarnChan {
 		if rdb != nil {
 			s.logger.Warningf("\033[33m%s\033[0m \n", string(log))
-			err := rdb.Publish(ctx, cfg.WarningChannel, log).Err()
+			err := rdb.Publish(ctx, cfg.Logging.Channels.Warning, log).Err()
 			if err != nil {
-				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				s.logger.WithError(err).Error("[LOGGER] Failed to publish log to Redis. Writing to file")
 				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
 			}
 		} else {
@@ -269,13 +269,13 @@ func (s *service) warningWorker(rdb *redis.Client, cfg Config, ctx context.Conte
 }
 
 func (s *service) errorWorker(rdb *redis.Client, cfg Config, ctx context.Context) {
-	s.logger.Debug("Starting error log publishing goroutine")
+	s.logger.Debug("[LOGGER] Starting error log publishing goroutine")
 	for log := range s.logErrorChan {
 		if rdb != nil {
 			s.logger.Errorf("\033[31m%s\033[0m \n", string(log))
-			err := rdb.Publish(ctx, cfg.ErrorChannel, log).Err()
+			err := rdb.Publish(ctx, cfg.Logging.Channels.Error, log).Err()
 			if err != nil {
-				s.logger.WithError(err).Error("Failed to publish log to Redis. Writing to file")
+				s.logger.WithError(err).Error("[LOGGER] Failed to publish log to Redis. Writing to file")
 				//helper.WriteToFile(fallbackFile, log) // Fallback to file logging
 			}
 		} else {
@@ -293,11 +293,11 @@ func (s *service) startPublish() {
 	var ctx context.Context
 	var err error
 
-	if cfg.IsPubSub {
+	if cfg.Logging.IsPubSub {
 		// Initialize Redis
-		rdb, ctx, err = caching.InitializeRedis(cfg.RedisHost, cfg.RedisPort, cfg.RedisDB)
+		rdb, ctx, err = caching.InitializeRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.LogsDB)
 		if err != nil {
-			s.logger.WithError(err).Error("Failed to initialize Redis. Falling back to file logging")
+			s.logger.WithError(err).Error("[LOGGER] Failed to initialize Redis. Falling back to file logging")
 			rdb = nil // Mark Redis as unavailable
 		}
 
@@ -333,7 +333,7 @@ func (s *service) startPublish() {
 		s.allWorker(rdb, *cfg, ctx)
 	}()
 
-	s.logger.Debug("All publishing goroutines have been started")
+	s.logger.Debug("[LOGGER] All publishing goroutines have been started")
 }
 
 func (s *service) Close(rdb *redis.Client) {
@@ -341,7 +341,7 @@ func (s *service) Close(rdb *redis.Client) {
 	if rdb != nil {
 		err := rdb.Close()
 		if err != nil {
-			s.logger.WithError(err).Error("Error while closing Redis client")
+			s.logger.WithError(err).Error("[LOGGER] Error while closing Redis client")
 		}
 	}
 

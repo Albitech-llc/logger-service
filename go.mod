@@ -1,4 +1,4 @@
-module github.com/Albitech-llc/logger-service
+module github.com/Elbitech-llc/logger-service
 
 go 1.23.2
 

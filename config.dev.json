@@ -1,0 +1,20 @@
+{
+    "Redis": {
+        "Host": "localhost",
+        "Port": "63799",
+        "LogsDB": 0
+    },
+    
+    "Logging": {
+        "IsPubSub": true,
+        "LogsFilePath": "fallback_logs.json",
+
+        "Channels": {
+            "Logs": "logs",
+            "Info": "info_logs",
+            "Warning": "warning_logs",
+            "Error": "error_logs",
+            "Debug": "debug_logs"
+        }
+    }
+}
