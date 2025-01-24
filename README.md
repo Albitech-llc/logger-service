@@ -15,7 +15,7 @@ Logger Service is a lightweight and extensible logging service built with Go. It
 ### Running the Service
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/logger-service.git
+git clone https://github.com/Elbitech-llc/logger-service.git
 cd logger-service
 ```
 2. Build and run the service using Docker Compose:
